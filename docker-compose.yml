@@ -1,0 +1,17 @@
+version: '3.1'
+
+services:
+  postgres_to_cum_fomes:
+    container_name: toCumFome
+    hostname: postgres_to_cum_fome
+    image: postgres
+    restart: always
+    environment: 
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: senha
+      POSTGRES_DB: blog-toCum-fome
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - ~/.PostgresData/postgresonly/postgres_toCum_fome:/var/lib/postgresql/data/pgdata
+    ports:
+      - 5432:5432
