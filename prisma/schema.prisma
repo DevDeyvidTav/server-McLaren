@@ -36,7 +36,6 @@ model Product {
   name        String
   price       String
   description String
-  banner      String
   create_at   DateTime? @default(now())
   updated_at  DateTime? @default(now())
   Category    Category? @relation(fields: [categoryId], references: [id])
@@ -47,15 +46,18 @@ model Product {
 }
 
 model Order {
-  id     String  @id @default(uuid())
-  adress String
-  status Boolean @default(false)
-  draft  Boolean @default(true)
-  name   String?
-
+  id         String    @id @default(uuid())
+  phone      String
+  adress     String?
+  status     Boolean   @default(false)
+  draft      Boolean   @default(true)
+  name       String
   create_at  DateTime? @default(now())
   updated_at DateTime? @default(now())
   items      Item[]
+  user_id     String
+  total_price Int?
+  payment_method String?
 }
 
 model Item {

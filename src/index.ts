@@ -9,8 +9,6 @@ import { isAuthenticated } from "./middlewares/isAuthenticated";
 import { createCategory } from "./services/createCategory";
 import { listCategory } from "./services/listCategory";
 import { createProducts } from "./services/createProduct";
-import multer from 'multer';
-import uploadConfig from './config/multer'
 import path from "path";
 import { getProductsByCategory } from "./services/getProductsByCategory";
 import { createOrder } from "./services/createOrder";
@@ -21,9 +19,12 @@ import { sendOrder } from "./services/sendOrder";
 import { listOrder } from "./services/listOrder";
 import { detailOrder } from "./services/detailOrder";
 import { finishOrder } from "./services/finishOrder";
+import { getProductsById } from "./services/getProductsById";
+import { VerifyOrderDraft } from "./services/vefifyOrderDraft";
+import { addAdress } from "./services/addAdress";
+import { addOrderPrice } from "./services/addOrderPrice";
 
 const app = express()
-const upload = multer(uploadConfig.upload("./tmp"));
 
 const prisma = new PrismaClient({
   log: ['query']
@@ -31,11 +32,6 @@ const prisma = new PrismaClient({
 
 app.use(express.json())
 app.use(cors());
-app.use(
-  '/files',
-  express.static(path.resolve(__dirname, '..', 'tmp'))
-)
-
 // user routes
 app.get('/me', isAuthenticated, async(req, res) => {
   const user_id = req.user_id;
@@ -62,12 +58,27 @@ app.post('/category', isAuthenticated, async (req, res) => {
   const category = await createCategory(name)
   return res.json(category)
 })
-
-app.post('/product', isAuthenticated,  upload.single('file'), async (req, res) => {
+app.get('/product', isAuthenticated, async (req, res) => {
+  const products = await prisma.product.findMany({
+    select:{
+      description: true,
+      name: true, 
+      price: true,
+      id: true,
+    }
+    
+  })
+  return res.json(products)
+})
+app.get('/product/id', isAuthenticated, async (req, res) => {
+  const product_id = req.query.product_id as string
+  const product = await getProductsById(product_id)
+  return res.json(product)
+})
+app.post('/product', async (req, res) => {
   const { name, price, description, category_id } = req.body;
-  const {originalname, filename: banner} = req.file;
 
-  const product = await createProducts(name, price, description, banner, category_id)
+  const product = await createProducts(name, price, description, category_id)
 
   return res.json(product)
 })
@@ -77,8 +88,8 @@ app.get('/category/product', isAuthenticated, async (req, res) => {
   return res.json(productById)
 })
 app.post( "/order", isAuthenticated, async (req, res) => {
-  const{ name, adress } = req.body
-  const order = await createOrder(name, adress)
+  const{ name, phone, user_id} = req.body
+  const order = await createOrder(name, phone, user_id)
   return res.json(order)
 })
 app.delete("/order", isAuthenticated, async (req, res) => {
@@ -111,9 +122,31 @@ app.get('/order/detail', isAuthenticated, async (req, res) => {
   const order = await detailOrder(order_id)
   return res.json(order) 
 })
+app.put('/order/add-address', isAuthenticated, async (req, res) => {
+  const order_id = req.query.order_id as string
+  const address = req.body 
+  const order = await addAdress(address, order_id)
+  return res.json(order)
+})
+app.put('/order/add-total-price', isAuthenticated, async (req, res) => {
+  const  { price, order_id } = req.body
+  const order = await addOrderPrice(price, order_id)
+  return res.json(order)
+})
+app.put('/order/add-payment-method', isAuthenticated, async (req, res) => {
+  const order_id = req.query.order_id as string
+  const payment_method = req.query.order_id as string
+  const order = await addAdress(payment_method, order_id)
+  return res.json(order)
+})
 app.put('/order/finish', isAuthenticated, async (req, res) => {
   const {order_id} = req.body 
   const order = await finishOrder(order_id)
+  return res.json(order)
+})
+app.get('/order/verifydraft', isAuthenticated, async (req, res) => {
+  const user_id = req.query.user_id as string
+  const order = await VerifyOrderDraft(user_id)
   return res.json(order)
 })
 
@@ -133,6 +166,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   })
 
 })
-app.listen(3000, () => {
-  console.log('listening on port 3000')
+app.listen(3003, () => {
+  console.log('listening on port 3003')
 })
+

@@ -7,7 +7,6 @@ export async function createProducts(
     name:string,
     price:string,
     description:string,
-    banner:string,
     category_id:string) {
 
 
@@ -16,7 +15,6 @@ export async function createProducts(
                 name: name,
                 price: price,
                 description: description,
-                banner: banner,
                 categoryId: category_id,
             }
         })
