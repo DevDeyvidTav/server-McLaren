@@ -23,6 +23,7 @@ import { getProductsById } from "./services/getProductsById";
 import { VerifyOrderDraft } from "./services/vefifyOrderDraft";
 import { addAdress } from "./services/addAdress";
 import { addOrderPrice } from "./services/addOrderPrice";
+import { addPaymentMethod } from "./services/addPaymentMethod";
 
 const app = express()
 
@@ -58,7 +59,7 @@ app.post('/category', isAuthenticated, async (req, res) => {
   const category = await createCategory(name)
   return res.json(category)
 })
-app.get('/product', isAuthenticated, async (req, res) => {
+app.get('/product',  async (req, res) => {
   const products = await prisma.product.findMany({
     select:{
       description: true,
@@ -74,6 +75,17 @@ app.get('/product/id', isAuthenticated, async (req, res) => {
   const product_id = req.query.product_id as string
   const product = await getProductsById(product_id)
   return res.json(product)
+})
+app.delete('/product', async (req, res) => {
+const product_id = req.query.product_id as string
+const product = await prisma.product.delete({
+  where:{
+    id: product_id
+  }
+
+})
+return res.json(product)
+
 })
 app.post('/product', async (req, res) => {
   const { name, price, description, category_id } = req.body;
@@ -92,7 +104,7 @@ app.post( "/order", isAuthenticated, async (req, res) => {
   const order = await createOrder(name, phone, user_id)
   return res.json(order)
 })
-app.delete("/order", isAuthenticated, async (req, res) => {
+app.delete("/order", async (req, res) => {
   const order_id = req.query.order_id as string
   const order = await deleteOrder(order_id)
   return res.json(order)
@@ -112,19 +124,36 @@ app.put('/order/send', isAuthenticated, async (req, res) =>{
   const order = await sendOrder(order_id)
   return res.json(order)
 })
-
-app.get('/orders', isAuthenticated, async (req, res) => {
+app.get('/order/user/id', async (req, res) =>{
+  const user_id = req.query.user_id as string
+  const order = await prisma.order.findFirst({
+    where: {
+      user_id: user_id,
+      draft: false
+    },
+    
+  })
+  return res.json(order)
+})
+app.get('/order/delivery', async (req, res) =>{
+  const orders = await prisma.order.findMany({
+    where:{
+      status: true
+    }
+  })
+  return res.json(orders)
+})
+app.get('/orders', async (req, res) => {
   const orders = await listOrder()
   return res.json(orders)
 })
-app.get('/order/detail', isAuthenticated, async (req, res) => {
+app.get('/order/detail', async (req, res) => {
   const order_id = req.query.order_id as string
   const order = await detailOrder(order_id)
   return res.json(order) 
 })
 app.put('/order/add-address', isAuthenticated, async (req, res) => {
-  const order_id = req.query.order_id as string
-  const address = req.body 
+  const { address, order_id} = req.body
   const order = await addAdress(address, order_id)
   return res.json(order)
 })
@@ -134,17 +163,16 @@ app.put('/order/add-total-price', isAuthenticated, async (req, res) => {
   return res.json(order)
 })
 app.put('/order/add-payment-method', isAuthenticated, async (req, res) => {
-  const order_id = req.query.order_id as string
-  const payment_method = req.query.order_id as string
-  const order = await addAdress(payment_method, order_id)
+  const {payment_method, order_id } = req.body
+  const order = await addPaymentMethod(payment_method, order_id)
   return res.json(order)
 })
-app.put('/order/finish', isAuthenticated, async (req, res) => {
+app.put('/order/finish', async (req, res) => {
   const {order_id} = req.body 
   const order = await finishOrder(order_id)
   return res.json(order)
 })
-app.get('/order/verifydraft', isAuthenticated, async (req, res) => {
+app.get('/order/verifydraft', async (req, res) => {
   const user_id = req.query.user_id as string
   const order = await VerifyOrderDraft(user_id)
   return res.json(order)
