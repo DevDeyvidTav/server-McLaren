@@ -184,7 +184,7 @@ app.use((err, req, res, next) => {
         message: 'Internal server error.'
     });
 });
-app.listen(process.env.port, () => {
-    console.log('listening on port 8080');
+app.listen(process.env.PORT, () => {
+    console.log('listening on port 8000');
 });
 //# sourceMappingURL=index.js.map

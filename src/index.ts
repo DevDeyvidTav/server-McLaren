@@ -194,7 +194,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   })
 
 })
-app.listen(process.env.port, () => {
-  console.log('listening on port 8080')
+app.listen(process.env.PORT, () => {
+  console.log('listening on port 8000')
 })
 
